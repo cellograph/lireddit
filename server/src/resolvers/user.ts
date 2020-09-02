@@ -7,7 +7,7 @@ import {
   ObjectType,
   Query,
   FieldResolver,
-  Root
+  Root,
 } from "type-graphql";
 import { MyContext } from "../types";
 import { User } from "../entities/User";
@@ -58,9 +58,9 @@ export class UserResolver {
         errors: [
           {
             field: "newPassword",
-            message: "length must be greater than 2"
-          }
-        ]
+            message: "length must be greater than 2",
+          },
+        ],
       };
     }
 
@@ -71,15 +71,15 @@ export class UserResolver {
         errors: [
           {
             field: "token",
-            message: "token expired"
-          }
-        ]
+            message: "token expired",
+          },
+        ],
       };
     }
 
     const userIdNum = parseInt(userId);
     const user = await prisma.user.findOne({
-      where: { id: userIdNum }
+      where: { id: userIdNum },
     });
 
     if (!user) {
@@ -87,17 +87,17 @@ export class UserResolver {
         errors: [
           {
             field: "token",
-            message: "user no longer exists"
-          }
-        ]
+            message: "user no longer exists",
+          },
+        ],
       };
     }
 
     await prisma.user.update({
       where: { id: userIdNum },
       data: {
-        password: await argon2.hash(newPassword)
-      }
+        password: await argon2.hash(newPassword),
+      },
     });
 
     await redis.del(key);
@@ -114,7 +114,7 @@ export class UserResolver {
     @Ctx() { redis, prisma }: MyContext
   ) {
     const user = await prisma.user.findOne({
-      where: { email }
+      where: { email },
     });
     if (!user) {
       // the email is not in the db
@@ -145,7 +145,7 @@ export class UserResolver {
       return null;
     }
     const user = await prisma.user.findOne({
-      where: { id: req.session.userId }
+      where: { id: req.session.userId },
     });
     return user;
   }
@@ -167,8 +167,8 @@ export class UserResolver {
         data: {
           username: options.username,
           email: options.email,
-          password: hashedPassword
-        }
+          password: hashedPassword,
+        },
       });
     } catch (err) {
       //|| err.detail.includes("already exists")) {
@@ -178,9 +178,9 @@ export class UserResolver {
           errors: [
             {
               field: "username",
-              message: "username already taken"
-            }
-          ]
+              message: "username already taken",
+            },
+          ],
         };
       }
     }
@@ -205,13 +205,13 @@ export class UserResolver {
   ): Promise<UserResponse> {
     const userByEmail = await prisma.user.findOne({
       where: {
-        email: usernameOrEmail
-      }
+        email: usernameOrEmail,
+      },
     });
     const userByUsername = await prisma.user.findOne({
       where: {
-        username: usernameOrEmail
-      }
+        username: usernameOrEmail,
+      },
     });
     const user = userByEmail || userByUsername;
     if (!user) {
@@ -219,9 +219,9 @@ export class UserResolver {
         errors: [
           {
             field: "usernameOrEmail",
-            message: "that username doesn't exist"
-          }
-        ]
+            message: "that username doesn't exist",
+          },
+        ],
       };
     }
     const valid = await argon2.verify(user.password, password);
@@ -230,16 +230,16 @@ export class UserResolver {
         errors: [
           {
             field: "password",
-            message: "incorrect password"
-          }
-        ]
+            message: "incorrect password",
+          },
+        ],
       };
     }
 
     req.session.userId = user.id;
 
     return {
-      user: user as User
+      user: user as User,
     };
   }
 

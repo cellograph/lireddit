@@ -10,7 +10,7 @@ import {
   Resolver,
   Root,
   ObjectType,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { Post } from "../entities/Post";
 import { User } from "../entities/User";
@@ -44,7 +44,7 @@ export class PostResolver {
   async creator(@Root() post: Post, @Ctx() { prisma }: MyContext) {
     return prisma.post
       .findOne({
-        where: { id: post.id }
+        where: { id: post.id },
       })
       .creator();
   }
@@ -59,9 +59,9 @@ export class PostResolver {
       where: {
         userId_postId: {
           postId: post.id,
-          userId: req.session.userId
-        }
-      }
+          userId: req.session.userId,
+        },
+      },
     });
 
     return updoot ? updoot.value : null;
@@ -82,14 +82,14 @@ export class PostResolver {
       where: {
         userId_postId: {
           postId,
-          userId
-        }
-      }
+          userId,
+        },
+      },
     });
 
     const post = await prisma.post.findOne({
       where: { id: postId },
-      select: { points: true }
+      select: { points: true },
     });
     if (!post) {
       return false;
@@ -100,17 +100,17 @@ export class PostResolver {
       // and they are changing their vote
       const op1 = prisma.updoot.update({
         where: {
-          userId_postId: { userId, postId }
+          userId_postId: { userId, postId },
         },
         data: {
-          value: realValue
-        }
+          value: realValue,
+        },
       });
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: { increment: 2 * realValue }
-        }
+          points: { increment: 2 * realValue },
+        },
       });
       await prisma.$transaction([op1, op2]);
     } else if (!updoot) {
@@ -119,14 +119,14 @@ export class PostResolver {
         data: {
           value: realValue,
           user: { connect: { id: userId } },
-          post: { connect: { id: postId } }
-        }
+          post: { connect: { id: postId } },
+        },
       });
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: { increment: 2 * realValue }
-        }
+          points: { increment: 2 * realValue },
+        },
       });
       await prisma.$transaction([op1, op2]);
     }
@@ -166,7 +166,7 @@ export class PostResolver {
 
     return {
       posts: posts.slice(0, realLimit),
-      hasMore: posts.length === reaLimitPlusOne
+      hasMore: posts.length === reaLimitPlusOne,
     };
   }
 
@@ -176,7 +176,7 @@ export class PostResolver {
     @Ctx() { prisma }: MyContext
   ): Promise<Post | null> {
     const post = await prisma.post.findOne({
-      where: { id }
+      where: { id },
     });
     return post as Post;
   }
@@ -193,10 +193,10 @@ export class PostResolver {
         text: input.text,
         creator: {
           connect: {
-            id: req.session.userId
-          }
-        }
-      }
+            id: req.session.userId,
+          },
+        },
+      },
     });
     return post as Post;
   }
@@ -211,12 +211,12 @@ export class PostResolver {
   ): Promise<Post | null> {
     const updatedPost = await prisma.post.update({
       where: {
-        id
+        id,
       },
       data: {
         title,
-        text
-      }
+        text,
+      },
     });
     return updatedPost as Post;
   }
@@ -236,11 +236,11 @@ export class PostResolver {
     }
 
     await prisma.updoot.deleteMany({
-      where: { postId: post.id }
+      where: { postId: post.id },
     });
 
     await prisma.post.delete({
-      where: { id }
+      where: { id },
     });
     return true;
   }
