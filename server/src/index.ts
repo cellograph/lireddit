@@ -11,10 +11,9 @@ import Redis from 'ioredis'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
 import cors from 'cors'
-import { createUserLoader } from './utils/createUserLoader'
-import { createUpdootLoader } from './utils/createUpdootLoader'
 import { PrismaClient } from '@prisma/client'
 
+// Log some env vars (remove in prod)
 console.log(`DATABASE_URL=${process.env.DATABASE_URL}`)
 console.log(`REDIS_URL=${process.env.REDIS_URL}`)
 console.log(`CORS_ORIGIN=${process.env.CORS_ORIGIN}`)
@@ -62,8 +61,6 @@ const main = async () => {
       req,
       res,
       redis,
-      userLoader: createUserLoader(),
-      updootLoader: createUpdootLoader(),
       prisma: new PrismaClient(),
     }),
   })

@@ -141,15 +141,9 @@ export class UserResolver {
   @Query(() => UserEntity, { nullable: true })
   async me(@Ctx() { req, prisma }: MyContext) {
     // you are not logged in
-    console.log(`req.session.userId: ${req.session.userId}`)
     if (!req.session.userId) {
-      console.log(`NOT LOGGED IN`)
       return null
     }
-
-    console.log(
-      `LOGGED IN, RETRIEVE USER WITH ID ${req.session.userId} FROM DB`,
-    )
     const user = await prisma.user.findOne({
       where: { id: req.session.userId },
     })
