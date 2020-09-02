@@ -112,8 +112,8 @@ export class PostResolver {
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: (post.points || 0) + 2 * realValue,
-        },
+          points: { increment: 2*realValue }
+        }
       })
       await prisma.$transaction([op1, op2])
     } else if (!updoot) {
@@ -128,8 +128,8 @@ export class PostResolver {
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: (post.points || 0) + 2 * realValue,
-        },
+          points: { increment: 2*realValue }
+        }
       })
       await prisma.$transaction([op1, op2])
     }
