@@ -10,7 +10,7 @@ import {
   Root,
 } from 'type-graphql'
 import { MyContext } from '../types'
-import { User as UserEntity } from '../entities/User'
+import { User } from '../entities/User'
 import argon2 from 'argon2'
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants'
 import { UsernamePasswordInput } from './UsernamePasswordInput'
@@ -31,14 +31,14 @@ class UserResponse {
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[]
 
-  @Field(() => UserEntity, { nullable: true })
-  user?: UserEntity
+  @Field(() => User, { nullable: true })
+  user?: User
 }
 
-@Resolver(UserEntity)
+@Resolver(User)
 export class UserResolver {
   @FieldResolver(() => String)
-  email(@Root() user: UserEntity, @Ctx() { req }: MyContext) {
+  email(@Root() user: User, @Ctx() { req }: MyContext) {
     // this is the current user and its ok to show them their own email
     if (req.session.userId === user.id) {
       return user.email
@@ -105,7 +105,7 @@ export class UserResolver {
     // log in user after change password
     req.session.userId = user.id
 
-    return { user: user as UserEntity }
+    return { user: user as User }
   }
 
   @Mutation(() => Boolean)
@@ -138,7 +138,7 @@ export class UserResolver {
     return true
   }
 
-  @Query(() => UserEntity, { nullable: true })
+  @Query(() => User, { nullable: true })
   async me(@Ctx() { req, prisma }: MyContext) {
     // you are not logged in
     if (!req.session.userId) {
@@ -194,7 +194,7 @@ export class UserResolver {
     // keep them logged in
     req.session.userId = user.id
 
-    return { user: user as UserEntity }
+    return { user: user as User }
   }
 
   @Mutation(() => UserResponse)
@@ -239,7 +239,7 @@ export class UserResolver {
     req.session.userId = user.id
 
     return {
-      user: user as UserEntity,
+      user: user as User,
     }
   }
 
