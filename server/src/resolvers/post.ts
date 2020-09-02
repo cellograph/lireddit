@@ -12,8 +12,8 @@ import {
   ObjectType,
   UseMiddleware,
 } from 'type-graphql'
-import { Post as PostEntity } from '../entities/Post'
-import { User as UserEntity } from '../entities/User'
+import { Post } from '../entities/Post'
+import { User } from '../entities/User'
 import { isAuth } from '../middleware/isAuth'
 import { MyContext } from '../types'
 
@@ -27,21 +27,21 @@ class PostInput {
 
 @ObjectType()
 class PaginatedPosts {
-  @Field(() => [PostEntity])
-  posts: PostEntity[]
+  @Field(() => [Post])
+  posts: Post[]
   @Field()
   hasMore: boolean
 }
 
-@Resolver(PostEntity)
+@Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
-  textSnippet(@Root() post: PostEntity) {
+  textSnippet(@Root() post: Post) {
     return post.text.slice(0, 50)
   }
 
-  @FieldResolver(() => UserEntity)
-  async creator(@Root() post: PostEntity, @Ctx() { prisma }: MyContext) {
+  @FieldResolver(() => User)
+  async creator(@Root() post: Post, @Ctx() { prisma }: MyContext) {
     return prisma.post
       .findOne({
         where: { id: post.id },
@@ -51,7 +51,7 @@ export class PostResolver {
 
   @FieldResolver(() => Int, { nullable: true })
   async voteStatus(
-    @Root() post: PostEntity,
+    @Root() post: Post,
     @Ctx() { req, prisma }: MyContext,
   ) {
     if (!req.session.userId) {
@@ -173,23 +173,23 @@ export class PostResolver {
     }
   }
 
-  @Query(() => PostEntity, { nullable: true })
+  @Query(() => Post, { nullable: true })
   async post(
     @Arg('id', () => Int) id: number,
     @Ctx() { prisma }: MyContext,
-  ): Promise<PostEntity | null> {
+  ): Promise<Post | null> {
     const post = await prisma.post.findOne({
       where: { id },
     })
-    return post as PostEntity
+    return post as Post
   }
 
-  @Mutation(() => PostEntity)
+  @Mutation(() => Post)
   @UseMiddleware(isAuth)
   async createPost(
     @Arg('input') input: PostInput,
     @Ctx() { req, prisma }: MyContext,
-  ): Promise<PostEntity> {
+  ): Promise<Post> {
     const post = await prisma.post.create({
       data: {
         title: input.title,
@@ -201,17 +201,17 @@ export class PostResolver {
         },
       },
     }) 
-    return post as PostEntity
+    return post as Post
   }
 
-  @Mutation(() => PostEntity, { nullable: true })
+  @Mutation(() => Post, { nullable: true })
   @UseMiddleware(isAuth)
   async updatePost(
     @Arg('id', () => Int) id: number,
     @Arg('title') title: string,
     @Arg('text') text: string,
     @Ctx() { prisma }: MyContext,
-  ): Promise<PostEntity | null> {
+  ): Promise<Post | null> {
     const updatedPost = await prisma.post.update({
       where: {
         id,
@@ -221,7 +221,7 @@ export class PostResolver {
         text,
       },
     })
-    return updatedPost as PostEntity
+    return updatedPost as Post
   }
 
   @Mutation(() => Boolean)
