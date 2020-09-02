@@ -6,10 +6,10 @@ import {
   InputType,
   Int,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
   Root,
-  ObjectType,
   UseMiddleware,
 } from "type-graphql";
 import { Post } from "../entities/Post";
