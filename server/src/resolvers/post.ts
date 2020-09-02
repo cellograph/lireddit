@@ -10,89 +10,89 @@ import {
   Resolver,
   Root,
   ObjectType,
-  UseMiddleware,
-} from 'type-graphql'
-import { Post } from '../entities/Post'
-import { User } from '../entities/User'
-import { isAuth } from '../middleware/isAuth'
-import { MyContext } from '../types'
+  UseMiddleware
+} from "type-graphql";
+import { Post } from "../entities/Post";
+import { User } from "../entities/User";
+import { isAuth } from "../middleware/isAuth";
+import { MyContext } from "../types";
 
 @InputType()
 class PostInput {
   @Field()
-  title: string
+  title: string;
   @Field()
-  text: string
+  text: string;
 }
 
 @ObjectType()
 class PaginatedPosts {
   @Field(() => [Post])
-  posts: Post[]
+  posts: Post[];
   @Field()
-  hasMore: boolean
+  hasMore: boolean;
 }
 
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
   textSnippet(@Root() post: Post) {
-    return post.text.slice(0, 50)
+    return post.text.slice(0, 50);
   }
 
   @FieldResolver(() => User)
   async creator(@Root() post: Post, @Ctx() { prisma }: MyContext) {
     return prisma.post
       .findOne({
-        where: { id: post.id },
+        where: { id: post.id }
       })
-      .creator()
+      .creator();
   }
 
   @FieldResolver(() => Int, { nullable: true })
   async voteStatus(@Root() post: Post, @Ctx() { req, prisma }: MyContext) {
     if (!req.session.userId) {
-      return null
+      return null;
     }
 
     const updoot = await prisma.updoot.findOne({
       where: {
         userId_postId: {
           postId: post.id,
-          userId: req.session.userId,
-        },
-      },
-    })
+          userId: req.session.userId
+        }
+      }
+    });
 
-    return updoot ? updoot.value : null
+    return updoot ? updoot.value : null;
   }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async vote(
-    @Arg('postId', () => Int) postId: number,
-    @Arg('value', () => Int) value: number,
-    @Ctx() { req, prisma }: MyContext,
+    @Arg("postId", () => Int) postId: number,
+    @Arg("value", () => Int) value: number,
+    @Ctx() { req, prisma }: MyContext
   ) {
-    const isUpdoot = value !== -1
-    const realValue = isUpdoot ? 1 : -1
-    const { userId } = req.session
+    const isUpdoot = value !== -1;
+    const realValue = isUpdoot ? 1 : -1;
+    const { userId } = req.session;
 
     const updoot = await prisma.updoot.findOne({
       where: {
         userId_postId: {
           postId,
-          userId,
-        },
-      },
-    })
+          userId
+        }
+      }
+    });
 
     const post = await prisma.post.findOne({
       where: { id: postId },
-      select: { points: true },
-    })
+      select: { points: true }
+    });
     if (!post) {
-      return false
+      return false;
     }
 
     if (updoot && updoot.value !== realValue) {
@@ -100,54 +100,54 @@ export class PostResolver {
       // and they are changing their vote
       const op1 = prisma.updoot.update({
         where: {
-          userId_postId: { userId, postId },
+          userId_postId: { userId, postId }
         },
         data: {
-          value: realValue,
-        },
-      })
+          value: realValue
+        }
+      });
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: { increment: 2 * realValue },
-        },
-      })
-      await prisma.$transaction([op1, op2])
+          points: { increment: 2 * realValue }
+        }
+      });
+      await prisma.$transaction([op1, op2]);
     } else if (!updoot) {
       // has never voted before
       const op1 = prisma.updoot.create({
         data: {
           value: realValue,
           user: { connect: { id: userId } },
-          post: { connect: { id: postId } },
-        },
-      })
+          post: { connect: { id: postId } }
+        }
+      });
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: { increment: 2 * realValue },
-        },
-      })
-      await prisma.$transaction([op1, op2])
+          points: { increment: 2 * realValue }
+        }
+      });
+      await prisma.$transaction([op1, op2]);
     }
-    return true
+    return true;
   }
 
   @Query(() => PaginatedPosts)
   async posts(
-    @Arg('limit', () => Int) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { prisma }: MyContext,
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { prisma }: MyContext
   ): Promise<PaginatedPosts> {
     // 20 -> 21
-    const realLimit = Math.min(50, limit)
-    const reaLimitPlusOne = realLimit + 1
+    const realLimit = Math.min(50, limit);
+    const reaLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [reaLimitPlusOne]
+    const replacements: any[] = [reaLimitPlusOne];
 
     if (cursor) {
-      const cursorDate = new Date(parseInt(cursor))
-      replacements.push(cursorDate.toISOString())
+      const cursorDate = new Date(parseInt(cursor));
+      replacements.push(cursorDate.toISOString());
     }
 
     /**
@@ -158,34 +158,34 @@ export class PostResolver {
     const query = `
     select p.*
     from post p
-    ${cursor ? `where p."createdAt" < '${replacements[1]}'::date` : ''}
+    ${cursor ? `where p."createdAt" < '${replacements[1]}'::date` : ""}
     order by p."createdAt" DESC
     limit ${limit};
-    `
-    const posts = await prisma.$queryRaw(query)
+    `;
+    const posts = await prisma.$queryRaw(query);
 
     return {
       posts: posts.slice(0, realLimit),
-      hasMore: posts.length === reaLimitPlusOne,
-    }
+      hasMore: posts.length === reaLimitPlusOne
+    };
   }
 
   @Query(() => Post, { nullable: true })
   async post(
-    @Arg('id', () => Int) id: number,
-    @Ctx() { prisma }: MyContext,
+    @Arg("id", () => Int) id: number,
+    @Ctx() { prisma }: MyContext
   ): Promise<Post | null> {
     const post = await prisma.post.findOne({
-      where: { id },
-    })
-    return post as Post
+      where: { id }
+    });
+    return post as Post;
   }
 
   @Mutation(() => Post)
   @UseMiddleware(isAuth)
   async createPost(
-    @Arg('input') input: PostInput,
-    @Ctx() { req, prisma }: MyContext,
+    @Arg("input") input: PostInput,
+    @Ctx() { req, prisma }: MyContext
   ): Promise<Post> {
     const post = await prisma.post.create({
       data: {
@@ -193,55 +193,55 @@ export class PostResolver {
         text: input.text,
         creator: {
           connect: {
-            id: req.session.userId,
-          },
-        },
-      },
-    })
-    return post as Post
+            id: req.session.userId
+          }
+        }
+      }
+    });
+    return post as Post;
   }
 
   @Mutation(() => Post, { nullable: true })
   @UseMiddleware(isAuth)
   async updatePost(
-    @Arg('id', () => Int) id: number,
-    @Arg('title') title: string,
-    @Arg('text') text: string,
-    @Ctx() { prisma }: MyContext,
+    @Arg("id", () => Int) id: number,
+    @Arg("title") title: string,
+    @Arg("text") text: string,
+    @Ctx() { prisma }: MyContext
   ): Promise<Post | null> {
     const updatedPost = await prisma.post.update({
       where: {
-        id,
+        id
       },
       data: {
         title,
-        text,
-      },
-    })
-    return updatedPost as Post
+        text
+      }
+    });
+    return updatedPost as Post;
   }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async deletePost(
-    @Arg('id', () => Int) id: number,
-    @Ctx() { req, prisma }: MyContext,
+    @Arg("id", () => Int) id: number,
+    @Ctx() { req, prisma }: MyContext
   ): Promise<boolean> {
-    const post = await prisma.post.findOne({ where: { id } })
+    const post = await prisma.post.findOne({ where: { id } });
     if (!post) {
-      return false
+      return false;
     }
     if (post.creatorId !== req.session.userId) {
-      throw new Error('not authorized')
+      throw new Error("not authorized");
     }
 
     await prisma.updoot.deleteMany({
-      where: { postId: post.id },
-    })
+      where: { postId: post.id }
+    });
 
     await prisma.post.delete({
-      where: { id },
-    })
-    return true
+      where: { id }
+    });
+    return true;
   }
 }
