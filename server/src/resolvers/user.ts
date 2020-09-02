@@ -203,17 +203,17 @@ export class UserResolver {
     @Arg("password") password: string,
     @Ctx() { req, prisma }: MyContext
   ): Promise<UserResponse> {
-    const userByEmail = await prisma.user.findOne({
+    const userByEmail = prisma.user.findOne({
       where: {
         email: usernameOrEmail,
       },
     });
-    const userByUsername = await prisma.user.findOne({
+    const userByUsername = prisma.user.findOne({
       where: {
         username: usernameOrEmail,
       },
     });
-    const user = userByEmail || userByUsername;
+    const user = await userByEmail || await userByUsername;
     if (!user) {
       return {
         errors: [
