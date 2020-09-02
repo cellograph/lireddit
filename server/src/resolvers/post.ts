@@ -50,10 +50,7 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Int, { nullable: true })
-  async voteStatus(
-    @Root() post: Post,
-    @Ctx() { req, prisma }: MyContext,
-  ) {
+  async voteStatus(@Root() post: Post, @Ctx() { req, prisma }: MyContext) {
     if (!req.session.userId) {
       return null
     }
@@ -112,8 +109,8 @@ export class PostResolver {
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: { increment: 2*realValue }
-        }
+          points: { increment: 2 * realValue },
+        },
       })
       await prisma.$transaction([op1, op2])
     } else if (!updoot) {
@@ -128,8 +125,8 @@ export class PostResolver {
       const op2 = prisma.post.update({
         where: { id: postId },
         data: {
-          points: { increment: 2*realValue }
-        }
+          points: { increment: 2 * realValue },
+        },
       })
       await prisma.$transaction([op1, op2])
     }
@@ -200,7 +197,7 @@ export class PostResolver {
           },
         },
       },
-    }) 
+    })
     return post as Post
   }
 
