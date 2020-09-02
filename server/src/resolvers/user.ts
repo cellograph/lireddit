@@ -204,14 +204,10 @@ export class UserResolver {
     @Ctx() { req, prisma }: MyContext
   ): Promise<UserResponse> {
     const userByEmail = prisma.user.findOne({
-      where: {
-        email: usernameOrEmail,
-      },
+      where: { email: usernameOrEmail },
     });
     const userByUsername = prisma.user.findOne({
-      where: {
-        username: usernameOrEmail,
-      },
+      where: { username: usernameOrEmail },
     });
     const user = await userByEmail || await userByUsername;
     if (!user) {
